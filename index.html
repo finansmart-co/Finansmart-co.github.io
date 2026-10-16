@@ -11,9 +11,15 @@
 @media(max-width:900px){.shell{grid-template-columns:1fr}.sidebar{height:auto;position:relative;padding:15px}.tagline{margin:5px 0 12px}.nav{display:flex;overflow-x:auto}.nav button{white-space:nowrap;padding:10px}.sidefoot{display:none}.main{padding:16px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.grid,.grid.two,.grid.three,.formgrid,.formgrid.two{grid-template-columns:1fr}.hero{padding:21px}.barrow{grid-template-columns:95px 1fr 75px}.metric{font-size:1.45rem}}
 </style>
+<style>
+#authGate{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#10243a,#2457c5);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,Segoe UI,Arial,sans-serif}#authCard{background:#fff;width:min(100%,440px);padding:30px;border-radius:20px;box-shadow:0 20px 60px #07172b55}#authCard h1{margin:0 0 8px;color:#10243a}#authCard p{color:#66758a;line-height:1.5}#authCard label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}#authCard input{width:100%;padding:12px;border:1px solid #cfd9e6;border-radius:9px}#authCard button{width:100%;margin-top:12px}#authCard .auth-google{background:#fff;color:#10243a;border:1px solid #cfd9e6}#authMsg{font-size:14px;min-height:20px;margin-top:12px}#authUser{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-bottom:12px;font-size:13px;color:#66758a}#authUser button{padding:7px 10px;font-size:12px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="shell">
+<div id="authGate"><div id="authCard"><div style="font-size:14px;font-weight:800;letter-spacing:1px;color:#2457c5;margin-bottom:16px">💰 FINANSMART</div><h1>Tu negocio, bajo control.</h1><p>Inicia sesión o crea tu cuenta para entrar a tu espacio de trabajo.</p><form id="authForm"><label for="authEmail">Correo electrónico</label><input id="authEmail" type="email" autocomplete="email" required placeholder="tu@correo.com"><label for="authPassword">Contraseña</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo 6 caracteres"><button type="submit" id="loginBtn">Iniciar sesión</button><button type="button" id="signupBtn" class="auth-google">Crear cuenta con correo</button></form><div style="text-align:center;color:#66758a;margin:15px 0 2px">o continúa con</div><button type="button" id="googleBtn" class="auth-google">Continuar con Google</button><div id="authMsg" role="status"></div><p style="font-size:12px;margin-bottom:0">Tus datos de esta demo se guardan en este navegador. El inicio de sesión no activa todavía sincronización en la nube.</p></div></div>
+<div id="authUser" style="display:none"><span id="authEmailLabel"></span><button id="logoutBtn" class="secondary">Cerrar sesión</button></div>
+<div class="shell" id="appShell" style="display:none">
 <aside class="sidebar">
   <div class="brand">💰 Finan<span>Smart</span></div>
   <div class="tagline">Entiende tu negocio. Controla tu dinero. Crece mejor.</div>
@@ -107,5 +113,22 @@ $('#runsim')?.addEventListener('click',runSimulation)
 function exportCSV(type){let rows,filename;if(type==='transactions'){rows=state.transactions;filename='finansmart_movimientos.csv'}else if(type==='products'){rows=state.products;filename='finansmart_inventario.csv'}else if(type==='goals'){rows=state.goals;filename='finansmart_metas.csv'}else if(type==='waste'){rows=state.waste;filename='finansmart_desperdicios.csv'}else{rows=state.sim;filename='finansmart_simulacion.csv'}if(!rows.length){alert('No hay datos para exportar todavía.');return}let keys=[...new Set(rows.flatMap(Object.keys))],csv=[keys.join(','),...rows.map(r=>keys.map(k=>`"${String(r[k]??'').replace(/"/g,'""')}"`).join(','))].join('\r\n');let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
 $('#nav').addEventListener('click',e=>{let b=e.target.closest('button[data-page]');if(!b)return;current=b.dataset.page;render()});
 render();
+
+// Supabase Auth: la URL y la publishable key son valores públicos para el cliente web.
+const SUPABASE_URL = 'https://bzjcusuupwceudwswhjv.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_i3J6I-TRvqYnrg-ZdWtvKQ_9I7wraB-';
+const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const authGate = document.getElementById('authGate');
+const appShell = document.getElementById('appShell');
+const authUser = document.getElementById('authUser');
+const authMsg = document.getElementById('authMsg');
+function authMessage(message, error=false){authMsg.textContent=message;authMsg.style.color=error?'#bd3d46':'#16835d'}
+function showSignedIn(session){const signed=!!session;authGate.style.display=signed?'none':'flex';appShell.style.display=signed?'':'none';authUser.style.display=signed?'flex':'none';document.getElementById('authEmailLabel').textContent=signed?(session.user.email||'Sesión iniciada'):''}
+document.getElementById('authForm').addEventListener('submit',async e=>{e.preventDefault();const email=document.getElementById('authEmail').value.trim();const password=document.getElementById('authPassword').value;authMessage('Iniciando sesión…');const {error}=await authClient.auth.signInWithPassword({email,password});if(error)authMessage(error.message,true)});
+document.getElementById('signupBtn').addEventListener('click',async()=>{const email=document.getElementById('authEmail').value.trim();const password=document.getElementById('authPassword').value;if(!email||password.length<6){authMessage('Escribe un correo válido y una contraseña de al menos 6 caracteres.',true);return}authMessage('Creando cuenta…');const {data,error}=await authClient.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});if(error){authMessage(error.message,true);return}if(data.session){showSignedIn(data.session);authMessage('Cuenta creada.')}else authMessage('Cuenta creada. Revisa tu correo para confirmar la dirección antes de iniciar sesión.')});
+document.getElementById('googleBtn').addEventListener('click',async()=>{authMessage('Conectando con Google…');const {error}=await authClient.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});if(error)authMessage(error.message,true)});
+document.getElementById('logoutBtn').addEventListener('click',async()=>{const {error}=await authClient.auth.signOut();if(error)authMessage(error.message,true)});
+authClient.auth.onAuthStateChange((_event,session)=>showSignedIn(session));
+authClient.auth.getSession().then(({data})=>showSignedIn(data.session));
 </script>
 </body></html>
