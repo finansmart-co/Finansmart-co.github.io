@@ -1,0 +1,19 @@
+FINANSMART - SITIO WEB ESTÁTICO
+
+ARCHIVO PRINCIPAL
+- index.html: página web completa. Puedes abrirlo en tu navegador para probarlo localmente.
+
+PUBLICAR GRATIS CON GITHUB PAGES
+1. Entra a https://github.com y crea una cuenta o inicia sesión.
+2. Crea un repositorio nuevo, por ejemplo finansmart-web.
+3. Sube index.html a la raíz del repositorio.
+4. En el repositorio, abre Settings > Pages.
+5. En "Build and deployment", elige "Deploy from a branch".
+6. Selecciona la rama main y la carpeta /(root), luego Save.
+7. Espera a que GitHub Pages publique el sitio. El enlace tendrá un formato similar a https://TU-USUARIO.github.io/finansmart-web/ .
+
+NOTAS IMPORTANTES
+- Este sitio es una demo web autónoma: no necesita Python ni Streamlit.
+- Los datos se guardan en el navegador de cada visitante con localStorage. No se comparten entre dispositivos ni entre usuarios y pueden perderse si se borran los datos del navegador.
+- No incluye cuentas, sincronización en nube, base de datos central ni pagos.
+- La simulación es aleatoria y no representa una predicción ni un estado contable real.
