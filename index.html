@@ -128,7 +128,23 @@ document.getElementById('authForm').addEventListener('submit',async e=>{e.preven
 document.getElementById('signupBtn').addEventListener('click',async()=>{const email=document.getElementById('authEmail').value.trim();const password=document.getElementById('authPassword').value;if(!email||password.length<6){authMessage('Escribe un correo válido y una contraseña de al menos 6 caracteres.',true);return}authMessage('Creando cuenta…');const {data,error}=await authClient.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});if(error){authMessage(error.message,true);return}if(data.session){showSignedIn(data.session);authMessage('Cuenta creada.')}else authMessage('Cuenta creada. Revisa tu correo para confirmar la dirección antes de iniciar sesión.')});
 document.getElementById('googleBtn').addEventListener('click',async()=>{authMessage('Conectando con Google…');const {error}=await authClient.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});if(error)authMessage(error.message,true)});
 document.getElementById('logoutBtn').addEventListener('click',async()=>{const {error}=await authClient.auth.signOut();if(error)authMessage(error.message,true)});
-authClient.auth.onAuthStateChange((_event,session)=>showSignedIn(session));
-authClient.auth.getSession().then(({data})=>showSignedIn(data.session));
+authClient.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+    showSignedIn(session);
+  } else if (event === 'SIGNED_OUT') {
+    showSignedIn(null);
+  }
+});
+
+(async () => {
+  const { data, error } = await authClient.auth.getSession();
+  if (error) {
+    authMessage('No se pudo recuperar la sesión: ' + error.message, true);
+    showSignedIn(null);
+    return;
+  }
+  showSignedIn(data.session);
+})();
+  
 </script>
 </body></html>
