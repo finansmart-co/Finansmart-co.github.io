@@ -15,6 +15,18 @@
 #authGate{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#10243a,#2457c5);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,Segoe UI,Arial,sans-serif}#authCard{background:#fff;width:min(100%,440px);padding:30px;border-radius:20px;box-shadow:0 20px 60px #07172b55}#authCard h1{margin:0 0 8px;color:#10243a}#authCard p{color:#66758a;line-height:1.5}#authCard label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}#authCard input{width:100%;padding:12px;border:1px solid #cfd9e6;border-radius:9px}#authCard button{width:100%;margin-top:12px}#authCard .auth-google{background:#fff;color:#10243a;border:1px solid #cfd9e6}#authMsg{font-size:14px;min-height:20px;margin-top:12px}#authUser{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-bottom:12px;font-size:13px;color:#66758a}#authUser button{padding:7px 10px;font-size:12px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+#appShell{grid-template-columns:250px minmax(0,1fr);transition:grid-template-columns .25s ease}
+#appShell.sidebar-collapsed{grid-template-columns:76px minmax(0,1fr)}
+#appShell.sidebar-collapsed .sidebar{padding-left:8px;padding-right:8px}
+#appShell.sidebar-collapsed .brand,
+#appShell.sidebar-collapsed .tagline,
+#appShell.sidebar-collapsed .sidefoot{display:none}
+#appShell.sidebar-collapsed #nav button{font-size:0;text-align:center;padding:11px 0}
+#appShell.sidebar-collapsed #nav button svg{margin:0}
+#sidebarToggle{display:block;margin-bottom:16px;width:100%;background:#24405d;color:#fff}
+</style>
 </head>
 <body>
 <div id="authGate"><div id="authCard"><div style="font-size:14px;font-weight:800;letter-spacing:1px;color:#2457c5;margin-bottom:16px">💰 FINANSMART</div><h1>Tu negocio, bajo control.</h1><p>Inicia sesión o crea tu cuenta para entrar a tu espacio de trabajo.</p><form id="authForm"><label for="authEmail">Correo electrónico</label><input id="authEmail" type="email" autocomplete="email" required placeholder="tu@correo.com"><label for="authPassword">Contraseña</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Mínimo 6 caracteres"><button type="submit" id="loginBtn">Iniciar sesión</button><button type="button" id="signupBtn" class="auth-google">Crear cuenta con correo</button></form><div style="text-align:center;color:#66758a;margin:15px 0 2px">o continúa con</div><button type="button" id="googleBtn" class="auth-google">Continuar con Google</button><div id="authMsg" role="status"></div><p style="font-size:12px;margin-bottom:0">Tus datos de esta demo se guardan en este navegador. El inicio de sesión no activa todavía sincronización en la nube.</p></div></div>
@@ -149,5 +161,18 @@ authClient.auth.onAuthStateChange((event, session) => {
   showSignedIn(data.session);
 })();
   
+(function(){
+  const shell = document.getElementById('appShell');
+  const toggle = document.getElementById('sidebarToggle');
+  if (!shell || !toggle) return;
+
+  toggle.addEventListener('click', function(){
+    const collapsed = shell.classList.toggle('sidebar-collapsed');
+    toggle.textContent = collapsed ? '☰' : '✕';
+    toggle.title = collapsed ? 'Expandir menú' : 'Contraer menú';
+    toggle.setAttribute('aria-label', toggle.title);
+  });
+})();
+
 </script>
 </body></html>
