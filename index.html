@@ -45,7 +45,10 @@ f<!DOCTYPE html>
 <button data-page="inventory"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9M7 5.8l9 5" fill="none" stroke="#e5b94f" stroke-width="1.8" stroke-linejoin="round"/></svg> Inventario</button>
 <button data-page="alerts"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" fill="none" stroke="#e5b94f" stroke-width="1.8" stroke-linecap="round"/><circle cx="18" cy="17" r="4" fill="#10243a" stroke="#63c9ef" stroke-width="1.8"/><path d="M18 15v2m0 1.5v.1" stroke="#63c9ef" stroke-width="1.8" stroke-linecap="round"/></svg> Alertas de gastos</button>
 <button data-page="goals"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="13" r="8" fill="none" stroke="#e5b94f" stroke-width="1.8"/><circle cx="11" cy="13" r="4" fill="none" stroke="#e5b94f" stroke-width="1.8"/><path d="m11 13 9-9m-5 0h5v5" fill="none" stroke="#63c9ef" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Metas de ahorro</button>
-<button data-page="eco"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4C11 4 5 7 5 14a6 6 0 0 0 6 6c7 0 9-7 9-16Z" fill="none" stroke="#e5b94f" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 21 15 9" stroke="#63c9ef" stroke-width="1.8" stroke-linecap="round"/></svg> Sostenibilidad</button>
+
+<button data-page="budgets">📊 Presupuestos mensuales</button>
+
+    <button data-page="eco"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4C11 4 5 7 5 14a6 6 0 0 0 6 6c7 0 9-7 9-16Z" fill="none" stroke="#e5b94f" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 21 15 9" stroke="#63c9ef" stroke-width="1.8" stroke-linecap="round"/></svg> Sostenibilidad</button>
 <button data-page="sim"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="2" width="12" height="20" rx="2" fill="none" stroke="#e5b94f" stroke-width="1.8"/><path d="M6 6h6M6 10h2m3 0h1m-6 4h2m3 0h1m-6 4h2" stroke="#e5b94f" stroke-width="1.8" stroke-linecap="round"/><path d="m14 17 3-3 2 2 3-5m-5 0h5v5" fill="none" stroke="#63c9ef" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Simulación</button>
 <button data-page="plans"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 6-9 6-9-6 9-6ZM3 14l9 6 9-6" fill="none" stroke="#e5b94f" stroke-width="1.8" stroke-linejoin="round"/><path d="m3 18 9 5 9-5" fill="none" stroke="#63c9ef" stroke-width="1.8" stroke-linejoin="round"/></svg> Planes</button>
   </nav>
@@ -112,10 +115,11 @@ function renderSim(){return pageTitle('Simulador de una jornada','Simula un día
 function simResults(){let sales=state.sim.filter(x=>x.type==='Venta').reduce((s,x)=>s+x.value,0),cost=state.sim.filter(x=>x.type==='Gasto').reduce((s,x)=>s+x.value,0),waste=state.sim.filter(x=>x.type==='Desperdicio').reduce((s,x)=>s+x.value,0);let rows=state.sim.slice(0,700).map(x=>`<tr><td>${x.time}</td><td>${x.type}</td><td>${esc(x.product)}</td><td>${x.qty}</td><td>${money(x.value)}</td></tr>`);return `<div class="grid" style="margin-top:16px">${card('Ventas simuladas',money(sales),'Valor de ventas')}${card('Gastos operativos',money(cost),'Gastos aleatorios')}${card('Costo de desperdicios',money(waste),'Costo estimado')}${card('Resultado simple',money(sales-cost-waste),'No incluye costo de todos los productos vendidos')}</div><div class="card" style="margin-top:16px"><h3>Eventos de la jornada (${state.sim.length})</h3><button class="secondary" onclick="exportCSV('sim')">Descargar simulación CSV</button>${table(['Hora','Tipo','Producto','Cantidad','Valor'],rows)}</div>`}
 function runSimulation(){let sc=Math.max(0,Math.min(100,Number($('#salechance').value)))/100,ec=Math.max(0,Math.min(100,Number($('#expensechance').value)))/100,wc=Math.max(0,Math.min(100,Number($('#wastechance').value)))/100;let stock=state.products.map(p=>({...p})),events=[];for(let m=0;m<480;m++){let time=`${String(8+Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;if(stock.length&&Math.random()<sc){let av=stock.filter(p=>p.stock>0);if(av.length){let p=av[Math.floor(Math.random()*av.length)],qty=1+Math.floor(Math.random()*Math.min(4,p.stock));p.stock-=qty;events.push({time,type:'Venta',product:p.name,qty,value:qty*p.price})}}if(Math.random()<ec)events.push({time,type:'Gasto',product:'Gasto operativo',qty:1,value:[5000,8000,12000,20000,30000][Math.floor(Math.random()*5)]});if(stock.length&&Math.random()<wc){let av=stock.filter(p=>p.stock>0);if(av.length){let p=av[Math.floor(Math.random()*av.length)];p.stock--;events.push({time,type:'Desperdicio',product:p.name,qty:1,value:p.cost})}}}state.sim=events;state.products.forEach(p=>{let sp=stock.find(q=>q.name===p.name);if(sp)p.stock=sp.stock});save();render()}
 function renderPlans(){return pageTitle('Planes FinanSmart','Una propuesta de planes accesibles para tiendas, restaurantes, peluquerías y otros pequeños negocios.')+`<div class="grid three"><div class="card"><div class="pill good">Para comenzar</div><h2>Básico</h2><p class="muted">Control financiero esencial.</p><ul><li>Registro de ingresos y gastos</li><li>Balance financiero</li><li>Calculadora de ganancias</li></ul><h3>Precio por definir</h3></div><div class="card" style="border:2px solid var(--blue)"><div class="pill">Más herramientas</div><h2>Negocio</h2><p class="muted">Para organizar operaciones.</p><ul><li>Todo lo del Básico</li><li>Control de inventario</li><li>Alertas de gastos</li><li>Metas de ahorro</li></ul><h3>Precio por definir</h3></div><div class="card"><div class="pill warn">Análisis ampliado</div><h2>Pro</h2><p class="muted">Para tomar decisiones con más información.</p><ul><li>Todo lo del Negocio</li><li>Simulación de escenarios</li><li>Informes descargables</li><li>Recomendaciones ampliadas</li></ul><h3>Precio por definir</h3></div></div><div class="notice">Estos planes son una propuesta. Esta demo no procesa pagos ni aplica restricciones de funciones por suscripción.</div>`}
-const pages={home:renderHome,transactions:renderTransactions,profit:renderProfit,inventory:renderInventory,alerts:renderAlerts,goals:renderGoals,eco:renderEco,sim:renderSim,plans:renderPlans};
+const pages={budgets:renderBudgets,home:renderHome,transactions:renderTransactions,profit:renderProfit,inventory:renderInventory,alerts:renderAlerts,goals:renderGoals,eco:renderEco,sim:renderSim,plans:renderPlans};
 let current='home';
 function render(){document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===current));$('#content').innerHTML=pages[current]();bindForms();if(current==='alerts')updateAlerts()}
-function bindForms(){
+
+  function bindForms(){
 $('#txform')?.addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target);state.transactions.push({date:f.get('date'),type:f.get('type'),amount:Number(f.get('amount')),category:f.get('category'),description:f.get('description')||f.get('category')});save();render()});
 $('#profitform')?.addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target),price=Number(f.get('price')),cost=Number(f.get('cost')),units=Number(f.get('units')),gain=price-cost,margin=price?gain/price*100:0;$('#profitresult').innerHTML=`<div class="grid three" style="margin-top:16px">${card('Ganancia por unidad',money(gain),'Precio menos costo')}${card('Ganancia estimada',money(gain*units),`${units} unidades`)}${card('Margen bruto',margin.toFixed(1)+'%','Antes de gastos generales e impuestos')}</div>${gain<0?'<div class="notice badbox">El costo supera el precio de venta.</div>':margin<15?'<div class="notice warnbox">Margen reducido: revisa costos y precio.</div>':'<div class="notice goodbox">Margen bruto positivo.</div>'}`});
 $('#productform')?.addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target),name=String(f.get('name')).trim();if(state.products.some(p=>p.name.toLowerCase()===name.toLowerCase())){alert('Ya existe un producto con ese nombre.');return}state.products.push({name,category:f.get('category'),stock:Number(f.get('stock')),price:Number(f.get('price')),cost:Number(f.get('cost'))});save();render()});
@@ -124,6 +128,70 @@ $('#goalform')?.addEventListener('submit',e=>{e.preventDefault();let f=new FormD
 $('#wasteform')?.addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target),p=state.products[Number(f.get('product'))],qty=Number(f.get('qty'));state.waste.push({date:f.get('date'),product:p.name,qty,cost:p.cost});save();render()});
 $('#threshold')?.addEventListener('change',updateAlerts);
 $('#runsim')?.addEventListener('click',runSimulation)
+}
+  async function renderBudgets(){
+  const monthNow = new Date().toISOString().slice(0, 7);
+  const monthStart = monthNow + '-01';
+
+  const [year, month] = monthNow.split('-').map(Number);
+  const nextDate = new Date(Date.UTC(year, month, 1));
+  const nextMonthStart =
+    nextDate.getUTCFullYear() + '-' +
+    String(nextDate.getUTCMonth() + 1).padStart(2, '0') + '-01';
+
+  const { data: { user }, error: userError } =
+    await authClient.auth.getUser();
+
+  if (userError || !user) {
+    return '<div class="card">Inicia sesión para consultar tus presupuestos.</div>';
+  }
+
+  const { data, error } = await authClient
+    .from('budgets')
+    .select('*')
+    .eq('user_id', user.id)
+    .gte('month', monthStart)
+    .lt('month', nextMonthStart)
+    .order('category');
+
+  if (error) {
+    console.error('Error consultando presupuestos:', error);
+    return `<div class="card">No se pudieron cargar los presupuestos. Revisa la conexión con Supabase.</div>`;
+  }
+
+  const budgets = data || [];
+
+  return `
+    <div class="card">
+      <h2>📊 Presupuestos mensuales</h2>
+      <p>Consulta los presupuestos registrados para este mes.</p>
+      <p><strong>Mes:</strong> ${monthNow}</p>
+      ${
+        budgets.length
+          ? `<div class="tablewrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Presupuesto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${budgets.map(b => `
+                    <tr>
+                      <td>${esc(b.name)}</td>
+                      <td>${esc(b.category)}</td>
+                      <td>${money(Number(b.amount))}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>`
+          : '<p>Aún no tienes presupuestos guardados para este mes.</p>'
+      }
+    </div>
+  `;
 }
 function exportCSV(type){let rows,filename;if(type==='transactions'){rows=state.transactions;filename='finansmart_movimientos.csv'}else if(type==='products'){rows=state.products;filename='finansmart_inventario.csv'}else if(type==='goals'){rows=state.goals;filename='finansmart_metas.csv'}else if(type==='waste'){rows=state.waste;filename='finansmart_desperdicios.csv'}else{rows=state.sim;filename='finansmart_simulacion.csv'}if(!rows.length){alert('No hay datos para exportar todavía.');return}let keys=[...new Set(rows.flatMap(Object.keys))],csv=[keys.join(','),...rows.map(r=>keys.map(k=>`"${String(r[k]??'').replace(/"/g,'""')}"`).join(','))].join('\r\n');let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
 $('#nav').addEventListener('click',e=>{let b=e.target.closest('button[data-page]');if(!b)return;current=b.dataset.page;render()});
